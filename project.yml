@@ -1,6 +1,6 @@
 name: MacAIUsage
 options:
-  bundleIdPrefix: jp.daiki
+  bundleIdPrefix: jp.olduvai
   deploymentTarget:
     macOS: '14.0'
 settings:
@@ -17,7 +17,7 @@ targets:
     sources: [App, Shared, Providers]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: jp.daiki.MacAIUsage
+        PRODUCT_BUNDLE_IDENTIFIER: jp.olduvai.MacAIUsage
         PRODUCT_NAME: MacAIUsage
         CODE_SIGN_ENTITLEMENTS: Config/App.entitlements
     info:
@@ -39,7 +39,7 @@ targets:
     sources: [Widget, Shared]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: jp.daiki.MacAIUsage.Widget
+        PRODUCT_BUNDLE_IDENTIFIER: jp.olduvai.MacAIUsage.Widget
         CODE_SIGN_ENTITLEMENTS: Config/Widget.entitlements
         APPLICATION_EXTENSION_API_ONLY: YES
         SKIP_INSTALL: YES

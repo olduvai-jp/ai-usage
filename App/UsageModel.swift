@@ -20,7 +20,7 @@ final class UsageModel: ObservableObject {
     func start() {
         guard !started else { return }
         started = true
-        let scheduler = NSBackgroundActivityScheduler(identifier: "jp.daiki.MacAIUsage.poll")
+        let scheduler = NSBackgroundActivityScheduler(identifier: "jp.olduvai.MacAIUsage.poll")
         scheduler.interval = 20 * 60
         scheduler.tolerance = 5 * 60
         scheduler.repeats = true

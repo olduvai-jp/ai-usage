@@ -1,8 +1,8 @@
 import Foundation
 
 enum SharedStore {
-    static let group = "TUYKQ3PV6F.jp.daiki.MacAIUsage"
-    static let refreshNotification = "jp.daiki.MacAIUsage.refresh"
+    static let group = "TUYKQ3PV6F.jp.olduvai.MacAIUsage"
+    static let refreshNotification = "jp.olduvai.MacAIUsage.refresh"
     static let widgetKind = "AIUsageWidget"
 
     static func directory() throws -> URL {

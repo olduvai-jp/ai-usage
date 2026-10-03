@@ -4,7 +4,7 @@ import CryptoKit
 import LocalAuthentication
 
 enum Credentials {
-    static let service = "jp.daiki.MacAIUsage.credentials"
+    static let service = "jp.olduvai.MacAIUsage.credentials"
     static func read(service: String, account: String? = nil, interactive: Bool) throws -> Data? {
         var query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
                                   kSecAttrService as String: service,

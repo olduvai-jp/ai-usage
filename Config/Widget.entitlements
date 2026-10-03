@@ -3,5 +3,5 @@
 <plist version="1.0"><dict>
 <key>com.apple.security.app-sandbox</key><true/>
 <key>com.apple.security.application-groups</key>
-<array><string>TUYKQ3PV6F.jp.daiki.MacAIUsage</string></array>
+<array><string>TUYKQ3PV6F.jp.olduvai.MacAIUsage</string></array>
 </dict></plist>
