@@ -45,8 +45,10 @@ Codex・Claude Code・OpenCode・SuperGrokの**定額プランの残り利用枠
 **動作要件:** macOS 14 (Sonoma) 以降
 
 ### 1. アプリを起動する
-ビルドした `MacAIUsage.app` を `/Applications` または `~/Applications` に配置して起動します。  
+[Releases](https://github.com/olduvai-jp/ai-usage/releases) に配布版がある場合はZIPをダウンロード・展開し、`MacAIUsage.app` を `/Applications` または `~/Applications` に配置して起動します。ソースからのビルド手順は下記「開発」を参照してください。
 （起動するとメニューバーにアイコンが常駐します）
+
+> 現在のGitHub Actions成果物は開発・検証向けのad-hoc署名版です。Developer ID署名・Apple公証はなく、Gatekeeperによる起動制限や、App Group／ウィジェットが動作しない可能性があります。別のMacでの動作検証が必要なため、Releaseはドラフトとして作成します。
 
 ### 2. 使いたいサービスを接続する
 メニューバーアイコンから **「接続設定」** を開きます。
@@ -121,6 +123,24 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild \
 # テスト実行
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
 ```
+
+### GitHub Actionsでのビルド・Release
+
+- `main`へのpush、Pull Request、手動実行で、テストとアーキテクチャ別Releaseビルドを行います。Apple Silicon用（`arm64`）とIntel用（`x86_64`）のZIP・SHA-256はActionsのArtifactsから取得できます。Universalバイナリではありません。
+- `vMAJOR.MINOR.PATCH`形式のタグをpushすると、同じ成果物を添付した**ドラフトRelease**を作成します。タグのバージョンとActionsの実行番号をアプリ・ウィジェット両方へ設定します。
+- CIに証明書やSecretsは不要です。一般配布前にDeveloper ID署名・公証を導入し、別のMacで起動・ウィジェット連携を検証してください。
+
+```sh
+# 変更をmainへpushした後に実行（バージョンは適宜変更）
+git tag v0.1.0
+git push origin v0.1.0
+
+# ローカルで同じパッケージを作成する場合
+ARCH=arm64 RELEASE_TAG=v0.1.0 BUILD_NUMBER=1 bash scripts/package-release.sh
+ARCH=x86_64 RELEASE_TAG=v0.1.0 BUILD_NUMBER=1 bash scripts/package-release.sh
+```
+
+出力先は `build/release/MacAIUsage-<version>-<arch>.zip` です。`ARCH`を省略すると実行中のMacのアーキテクチャを使用します。ドラフトを確認したうえでGitHub上から公開できます。再実行時はドラフトの添付のみ更新し、公開済みReleaseは変更しません。
 
 ### インストール済みアプリ・ウィジェットの更新
 ファイルを置き換えるだけでは実行中のWidget Extensionプロセスが終了しない場合があります。以下の手順でプロセスを再起動してください。

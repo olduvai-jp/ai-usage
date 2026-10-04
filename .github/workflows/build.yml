@@ -1,0 +1,81 @@
+name: Build and release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  build:
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x86_64]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Test
+        run: swift test
+      - name: Build and package
+        env:
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          ARCH: ${{ matrix.arch }}
+        run: bash scripts/package-release.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MacAIUsage-${{ matrix.arch }}
+          path: |
+            build/release/*-${{ matrix.arch }}.zip
+            build/release/*-${{ matrix.arch }}.zip.sha256
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: MacAIUsage-*
+          merge-multiple: true
+          path: release
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          cat > release-notes.md <<'EOF'
+          macOS 14以降 / Apple Silicon・Intel対応。
+          Apple Siliconはarm64、Intel Macはx86_64のZIPを選んでください。
+
+          **開発・検証向けのad-hoc署名版です。Developer ID署名・Apple公証はありません。**
+          Gatekeeperによって起動が制限される場合があります。また、App Groupや
+          Widget Extensionが別のMacでも動作することは未検証です。
+          一般配布向けにはDeveloper ID署名・公証と実機検証が必要です。
+
+          ZIPを展開し、MacAIUsage.appをApplicationsへ配置してください。
+          同梱のSHA-256ファイルでダウンロード内容を確認できます。
+          EOF
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            # 公開済みのリリースを再実行で書き換えない。
+            test "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = true
+            gh release upload "$RELEASE_TAG" release/*.zip release/*.sha256 --clobber
+          else
+            gh release create "$RELEASE_TAG" release/*.zip release/*.sha256 \
+              --verify-tag --draft --title "$RELEASE_TAG" --notes-file release-notes.md
+          fi
