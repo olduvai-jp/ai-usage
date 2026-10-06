@@ -8,21 +8,17 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("AI Usage").font(.largeTitle.bold())
-                    Text("定額プランの残り枠").foregroundStyle(.secondary)
-                }
+            HStack(spacing: 12) {
+                Picker("画面", selection: $model.showSettings) {
+                    Text("使用状況").tag(false)
+                    Text("接続設定").tag(true)
+                }.pickerStyle(.segmented).labelsHidden().frame(maxWidth: 260)
                 Spacer()
                 if model.refreshing { ProgressView().controlSize(.small) }
                 Button { Task { await model.refresh(interactive: true) } } label: {
                     Label("更新", systemImage: "arrow.clockwise")
                 }.disabled(model.refreshing)
-            }.padding(24)
-            Picker("画面", selection: $model.showSettings) {
-                Text("使用状況").tag(false)
-                Text("接続設定").tag(true)
-            }.pickerStyle(.segmented).labelsHidden().padding(.horizontal, 24).padding(.bottom, 16)
+            }.padding(.horizontal, 24).padding(.vertical, 12)
             Divider()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {

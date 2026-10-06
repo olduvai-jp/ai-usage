@@ -32,7 +32,7 @@ struct UsageWidgetView: View {
             }
             ForEach(services) { usage in
                 if family == .systemSmall {
-                    smallRow(usage)
+                    CompactUsageRow(usage: usage, now: entry.date)
                 } else {
                     Link(destination: usage.service.detailURL) {
                         if family == .systemLarge { largeRow(usage) }
@@ -45,22 +45,6 @@ struct UsageWidgetView: View {
             footer
         }
         .widgetURL(URL(string: "macaiusage://overview")!)
-    }
-
-    private func smallRow(_ usage: ServiceUsage) -> some View {
-        HStack(spacing: 6) {
-            ServiceIcon(service: usage.service, size: 20)
-            if usage.fetchedAt != nil {
-                if let weekly = usage.window(.weekly) { RemainingValue(window: weekly, compact: true) }
-                else if usage.window(.monthly) == nil, let quota = usage.commonWindows.first {
-                    RemainingValue(window: quota, compact: true)
-                }
-                if let monthly = usage.window(.monthly) { RemainingValue(window: monthly, compact: true) }
-            } else { Text(usage.state == .unconnected ? "未接続" : "—").foregroundStyle(.secondary) }
-            Spacer(minLength: 0)
-            UsageWarning(usage: usage, now: entry.date)
-        }
-        .font(.system(size: 12)).lineLimit(1).minimumScaleFactor(0.8)
     }
 
     private func mediumRow(_ usage: ServiceUsage) -> some View {

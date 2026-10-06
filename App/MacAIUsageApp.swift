@@ -20,6 +20,7 @@ struct MacAIUsageApp: App {
         MenuBarExtra("AI Usage", systemImage: "chart.bar.xaxis") {
             MenuContent(model: model)
         }
+        .menuBarExtraStyle(.window)
     }
 }
 
@@ -81,17 +82,54 @@ private struct MenuContent: View {
     @ObservedObject var model: UsageModel
     @Environment(\.openWindow) private var openWindow
     var body: some View {
-        Button("使用状況を表示") { show(settings: false) }
-        Button(model.refreshing ? "更新中…" : "今すぐ更新") { Task { await model.refresh(interactive: true) } }
-            .disabled(model.refreshing)
-        Divider()
-        Button("接続設定…") { show(settings: true) }
-        Button("AI Usageを終了") { NSApp.terminate(nil) }
-            .keyboardShortcut("q")
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("残り").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Spacer()
+                if model.refreshing { ProgressView().controlSize(.small) }
+                Button { Task { await model.refresh(interactive: true) } } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .disabled(model.refreshing)
+                .accessibilityLabel("使用状況を更新")
+            }
+            TimelineView(.periodic(from: .now, by: 60)) { context in
+                VStack(alignment: .leading, spacing: 10) {
+                    if let error = model.errorMessage ?? model.snapshot.loadError {
+                        Label(error, systemImage: "exclamationmark.triangle")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
+                    if model.snapshot.configuredServices.isEmpty {
+                        Button("接続設定を開く") { show(settings: true) }
+                    }
+                    ForEach(model.snapshot.configuredServices) { usage in
+                        Button { show(settings: false, service: usage.service) } label: {
+                            CompactUsageRow(usage: usage, now: context.date)
+                                .contentShape(Rectangle())
+                        }.buttonStyle(.plain)
+                    }
+                    if let oldest = model.snapshot.configuredServices.filter({ $0.fetchedAt != nil })
+                        .min(by: { $0.fetchedAt! < $1.fetchedAt! }) {
+                        Text(oldest.ageText(at: context.date))
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            Divider()
+            HStack {
+                Button("詳細") { show(settings: false) }
+                Button("接続設定…") { show(settings: true) }
+                Spacer()
+                Button("終了") { NSApp.terminate(nil) }
+                    .keyboardShortcut("q")
+            }
+        }
+        .padding(14)
+        .frame(width: 280)
     }
-    private func show(settings: Bool) {
+    private func show(settings: Bool, service: Service? = nil) {
         model.showSettings = settings
-        model.selectedService = nil
+        model.selectedService = service
         openWindow(id: "main")
         NSApp.activate(ignoringOtherApps: true)
     }

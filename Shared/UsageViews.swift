@@ -14,6 +14,28 @@ struct ServiceIcon: View {
     }
 }
 
+/// The same quota summary is used in the small widget and menu-bar popover.
+struct CompactUsageRow: View {
+    let usage: ServiceUsage
+    let now: Date
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ServiceIcon(service: usage.service, size: 20)
+            if usage.fetchedAt != nil {
+                if let weekly = usage.window(.weekly) { RemainingValue(window: weekly, compact: true) }
+                else if usage.window(.monthly) == nil, let quota = usage.commonWindows.first {
+                    RemainingValue(window: quota, compact: true)
+                }
+                if let monthly = usage.window(.monthly) { RemainingValue(window: monthly, compact: true) }
+            } else { Text(usage.state == .unconnected ? "未接続" : "—").foregroundStyle(.secondary) }
+            Spacer(minLength: 0)
+            UsageWarning(usage: usage, now: now)
+        }
+        .font(.system(size: 12)).lineLimit(1).minimumScaleFactor(0.8)
+    }
+}
+
 struct RemainingValue: View {
     let window: QuotaWindow
     var compact = false
